@@ -86,7 +86,6 @@ const make = (key) => {
         const amount_min = req.query.amount_min;
         const amount_max = req.query.amount_max;
 
-        // Dynamic filter fields (e.g. ?bill_no=444&quality_name=Cotton)
         const extraFilters = {};
         if (c.filterFields) {
           c.filterFields.forEach(f => {
@@ -97,13 +96,10 @@ const make = (key) => {
         let conditions = [];
         let params = [];
 
-        // Text search
         if (search) {
           conditions.push('(' + c.search.map(f => `${f} LIKE ?`).join(' OR ') + ')');
           c.search.forEach(() => params.push(`%${search}%`));
         }
-
-        // Date range
         if (date_from && c.dateField) {
           conditions.push(`${c.dateField} >= ?`);
           params.push(date_from);
@@ -112,8 +108,6 @@ const make = (key) => {
           conditions.push(`${c.dateField} <= ?`);
           params.push(date_to);
         }
-
-        // Amount range
         if (amount_min && c.amountField) {
           conditions.push(`${c.amountField} >= ?`);
           params.push(parseFloat(amount_min));
@@ -122,24 +116,25 @@ const make = (key) => {
           conditions.push(`${c.amountField} <= ?`);
           params.push(parseFloat(amount_max));
         }
-
-        // Exact field filters
         Object.entries(extraFilters).forEach(([field, val]) => {
           conditions.push(`${field} LIKE ?`);
           params.push(`%${val}%`);
         });
 
         const where = conditions.length ? 'WHERE ' + conditions.join(' AND ') : '';
+        const limitNum  = parseInt(limit);
+        const offsetNum = parseInt(offset);
 
-        const [rows] = await db.execute(
-          `SELECT * FROM ${c.table} ${where} ORDER BY created_at DESC LIMIT ? OFFSET ?`,
-          [...params, limit, offset]
+        const [rows] = await db.query(
+          `SELECT * FROM ${c.table} ${where} ORDER BY created_at DESC LIMIT ${limitNum} OFFSET ${offsetNum}`,
+          params
         );
-        const [[{ total }]] = await db.execute(
+        const [[{ total }]] = await db.query(
           `SELECT COUNT(*) AS total FROM ${c.table} ${where}`, params
         );
         res.json({ success: true, data: rows, total, page, pages: Math.ceil(total / limit) });
       } catch (e) {
+        console.error('getAll error:', e.message);
         res.status(500).json({ success: false, message: e.message });
       }
     },
@@ -166,7 +161,6 @@ const make = (key) => {
         if (!cols.length) return res.status(400).json({ success: false, message: 'No data provided' });
         const vals = cols.map(f => body[f]);
 
-        // Auto CPO number for customer_po
         let cpo_number = null;
         if (key === 'customer_po' && body.selling_firm) {
           const firmName = body.selling_firm;
