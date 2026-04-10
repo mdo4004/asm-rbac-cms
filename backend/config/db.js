@@ -3,6 +3,7 @@ require('dotenv').config();
 
 const pool = mysql.createPool({
   host:               process.env.DB_HOST     || 'localhost',
+  port:               parseInt(process.env.DB_PORT || '3306'),
   user:               process.env.DB_USER     || 'root',
   password:           process.env.DB_PASSWORD || '',
   database:           process.env.DB_NAME     || 'asm_rbac',
@@ -10,9 +11,9 @@ const pool = mysql.createPool({
   connectionLimit:    10,
   queueLimit:         0,
   timezone:           '+00:00',
+  decimalNumbers:     true,
 });
 
-// Test connection on startup
 pool.getConnection()
   .then(conn => {
     console.log('✅ MySQL connected →', process.env.DB_NAME || 'asm_rbac');
@@ -20,7 +21,6 @@ pool.getConnection()
   })
   .catch(err => {
     console.error('❌ MySQL connection FAILED:', err.message);
-    console.error('   Check DB_HOST, DB_USER, DB_PASSWORD, DB_NAME in backend/.env');
     process.exit(1);
   });
 
