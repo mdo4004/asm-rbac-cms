@@ -104,13 +104,15 @@ exports.getAll = async (req,res) => {
     if(firm)     { conditions.push('c.selling_firm LIKE ?'); params.push(`%${firm}%`); }
 
     const where = 'WHERE ' + conditions.join(' AND ');
-    const [rows]=await db.execute(
+    const limitNum = parseInt(limit);
+    const offsetNum = parseInt(offset);
+    const [rows]=await db.query(
       `SELECT c.*, COUNT(sk.id) AS sku_count, SUM(sk.finish_qty) AS total_finish, SUM(sk.grey_qty) AS total_grey
        FROM cpo_orders c LEFT JOIN cpo_skus sk ON sk.cpo_id=c.id
-       ${where} GROUP BY c.id ORDER BY c.created_at DESC LIMIT ? OFFSET ?`,
-      [...params,limit,offset]
+       ${where} GROUP BY c.id ORDER BY c.created_at DESC LIMIT ${limitNum} OFFSET ${offsetNum}`,
+      params
     );
-    const [[{total}]]=await db.execute(
+    const [[{total}]]=await db.query(
       `SELECT COUNT(*) AS total FROM cpo_orders c ${where}`, params
     );
     res.json({success:true,data:rows,total,page,limit,pages:Math.ceil(total/limit)});

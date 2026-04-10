@@ -91,13 +91,13 @@ exports.getAll = async (req,res) => {
     if(process_type){ conditions.push('j.process_type LIKE ?');   params.push(`%${process_type}%`); }
 
     const where = conditions.length ? 'WHERE '+conditions.join(' AND ') : '';
-    const [rows]=await db.execute(
+    const [rows]=await db.query(
       `SELECT j.*,cs.quality,cs.color,cs.width,cs.fabric_type,cs.gsm,
               js.grey_qty AS sku_grey_qty,js.finish_qty AS sku_finish_qty,
               co.customer_name,co.selling_firm,co.merchant AS cpo_merchant
        FROM jpo_orders j JOIN jpo_skus js ON js.jpo_id=j.id JOIN cpo_skus cs ON cs.id=js.sku_id JOIN cpo_orders co ON co.id=j.cpo_id
-       ${where} ORDER BY j.created_at DESC LIMIT ? OFFSET ?`,
-      [...params,limit,offset]
+       ${where} ORDER BY j.created_at DESC LIMIT ${parseInt(limit)} OFFSET ${parseInt(offset)}`,
+      params
     );
     const [[{total}]]=await db.execute(
       `SELECT COUNT(*) AS total FROM jpo_orders j

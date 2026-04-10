@@ -88,15 +88,15 @@ exports.getAll = async (req,res) => {
     if(quality)    { conditions.push('cs.quality LIKE ?');     params.push(`%${quality}%`); }
 
     const where = conditions.length ? 'WHERE '+conditions.join(' AND ') : '';
-    const [rows]=await db.execute(
+    const [rows]=await db.query(
       `SELECT s.*,cs.quality,cs.color,cs.width,cs.fabric_type,cs.gsm,cs.finish_qty AS orig_finish_qty,
               ss.grey_qty AS sku_grey_qty,co.customer_name,co.selling_firm,co.po_date AS cpo_po_date
        FROM spo_orders s
        JOIN spo_skus ss ON ss.spo_id=s.id
        JOIN cpo_skus cs ON cs.id=ss.sku_id
        JOIN cpo_orders co ON co.id=s.cpo_id
-       ${where} ORDER BY s.created_at DESC LIMIT ? OFFSET ?`,
-      [...params,limit,offset]
+       ${where} ORDER BY s.created_at DESC LIMIT ${parseInt(limit)} OFFSET ${parseInt(offset)}`,
+      params
     );
     const [[{total}]]=await db.execute(
       `SELECT COUNT(*) AS total FROM spo_orders s
