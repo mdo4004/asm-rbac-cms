@@ -31,11 +31,13 @@ exports.getAll = async (req, res) => {
       params.push(`%${search}%`);
     }
 
-    const [rows] = await db.execute(
-      `SELECT * FROM ${c.table} ${where} ORDER BY name ASC LIMIT ? OFFSET ?`,
-      [...params, limit, offset]
+    const limitNum = parseInt(limit);
+    const offsetNum = parseInt(offset);
+    const [rows] = await db.query(
+      `SELECT * FROM ${c.table} ${where} ORDER BY name ASC LIMIT ${limitNum} OFFSET ${offsetNum}`,
+      params
     );
-    const [[{ total }]] = await db.execute(
+    const [[{ total }]] = await db.query(
       `SELECT COUNT(*) AS total FROM ${c.table} ${where}`, params
     );
 

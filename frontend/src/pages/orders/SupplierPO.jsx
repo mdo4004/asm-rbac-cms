@@ -125,7 +125,10 @@ export default function SupplierPO() {
     finally{ setSubmitting(false); }
   };
 
-  const openPDF=(id)=>window.open(`/api/orders/spo/${id}/pdf`,'_blank');
+  const openPDF = (id) => {
+    const base = import.meta.env.VITE_API_URL || '/api';
+    window.open(`${base}/orders/spo/${id}/pdf`, '_blank');
+  };
   const deleteSPO=async(id)=>{ if(!canDel) return toast.error('No delete permission'); if(!confirm('Delete?')) return; try{await api.delete(`/orders/spo/${id}`);toast.success('Deleted');loadRecent(page);}catch{toast.error('Delete failed');} };
 
   return (

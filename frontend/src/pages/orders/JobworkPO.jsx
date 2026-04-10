@@ -214,7 +214,10 @@ export default function JobworkPO() {
     }
   };
 
-  const openPDF = (id) => window.open(`/api/orders/jpo/${id}/pdf`, '_blank');
+  const openPDF = (id) => {
+    const base = import.meta.env.VITE_API_URL || '/api';
+    window.open(`${base}/orders/jpo/${id}/pdf`, '_blank');
+  };
 
   const deleteJPO = async (id) => {
     if (!canDel) return toast.error('No delete permission');

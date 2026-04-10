@@ -159,7 +159,10 @@ export default function CustomerPOForm() {
     finally{ setLoading(false); }
   };
 
-  const openPDF   = (id) => window.open(`/api/orders/cpo/${id}/pdf`,'_blank');
+  const openPDF   = (id) => {
+    const base = import.meta.env.VITE_API_URL || '/api';
+    window.open(`${base}/orders/cpo/${id}/pdf`, '_blank');
+  };
   const deleteCPO = async (id) => {
     if(!canDel) return toast.error('No delete permission');
     if(!confirm('Delete this CPO?')) return;
